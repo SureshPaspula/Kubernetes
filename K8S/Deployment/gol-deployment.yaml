@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameoflife-deploy
+  labels:
+    app: gameoflife
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: gameoflife
+  template:
+    metadata:
+      labels:
+        app: gameoflife
+        version: "1.1"
+    spec:
+      containers:
+        - image: jenkins:2.60.3
+          name: gol-dev
+          ports:
+            - containerPort: 8080
+              protocol: TCP
