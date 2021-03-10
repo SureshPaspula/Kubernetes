@@ -1,0 +1,43 @@
+- name: Get istio k8s install path
+  set_fact:
+    istio_k8s_dir: "{{ playbook_dir | dirname }}"
+
+- name: Set istio definition pull path
+  import_tasks: set_istio_distro_vars.yml
+
+- name: Add istio bin dir to PATH
+  import_tasks: add_to_path.yml
+
+- include_tasks: safely_create_namespace.yml
+  vars:
+    ns_name: 'istio-system'
+
+- name: Check if any Kiali Secret present
+  shell: kubectl get secret kiali -n istio-system
+  register: secretexist
+  ignore_errors: true  
+ 
+- name: Create Kiali Secret
+  shell: "echo \"{{ secret | to_yaml }}\" | {{cmd_path}} create -f - "
+  when: secretexist.rc != 0
+
+- name: To check if Istio_manifests folder exists
+  stat:
+    path: "{{ istio_manifests }}"
+  register: istio_manifests_exists
+
+- name: Create Istio manifests folder
+  shell: "mkdir {{ istio_manifests }}"
+  when:
+     - not istio_manifests_exists.stat.exists 
+
+- name: Copy istio YAML file to K8 master
+  copy:
+    src: istio.yml
+    dest: "{{ istio_manifests }}/istio.yml"
+    mode: 0755
+
+- name: Deploy Istio from kubernetes file
+  shell: "{{ cmd_path }} apply -f {{ istio_manifests }}/istio.yml"
+  ignore_errors: true
+

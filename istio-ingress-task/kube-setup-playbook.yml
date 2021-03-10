@@ -1,0 +1,28 @@
+- name: Configure Kube-adm master
+  hosts: kube-masters
+  become: true
+  gather_facts: true
+  vars:
+    nodeip: var=ansible_eth0.ipv4.address
+  roles:
+    - role: kubeadm-master-role
+      vars_files:
+        - group_vars/all.yml
+
+- name: Configure Kube-adm worker
+  hosts: kube-workers
+  become: true
+  gather_facts: true
+  roles:
+    - name: kubeadm-worker-role
+      role: kubeadm-worker-role
+      vars_files:
+        - group_vars/all.yml
+
+- name: Istio play
+  hosts: kube-masters
+  gather_facts: true
+  become: true
+  roles:
+    - istio
+

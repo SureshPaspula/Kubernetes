@@ -1,0 +1,1 @@
+KubeADM master setup role

@@ -1,0 +1,13 @@
+# Create a label with istio-injection enabled
+
+- name: Create label for kong with istio-injection enabled
+  shell: "kubectl label namespace default istio-injection=enabled"
+  ignore_errors: true
+
+
+
+
+
+
+
+

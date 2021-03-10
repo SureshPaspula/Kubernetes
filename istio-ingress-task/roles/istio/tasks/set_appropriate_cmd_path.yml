@@ -1,0 +1,6 @@
+---
+
+- name: Assume that command is already on the PATH
+  set_fact:
+    cmd_path: "{{ 'kubectl' }}"
+  when: cmd_path is not defined

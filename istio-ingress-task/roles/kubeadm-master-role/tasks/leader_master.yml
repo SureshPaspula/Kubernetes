@@ -1,0 +1,23 @@
+- name: kubeadm | Check if kubeadm has already run
+  stat:
+     path: "/var/lib/kubelet/config.yaml"
+  register: kubeadm_already_run
+- name: Initializing Kubernetes cluster
+  shell: kubeadm init --control-plane-endpoint {{ansible_eth0.ipv4.address}}:6443 --upload-certs --apiserver-advertise-address {{ansible_eth0.ipv4.address}} --pod-network-cidr 172.31.0.0/16
+  register: output
+  when:
+    - not kubeadm_already_run.stat.exists
+- name: Storing Logs and Generated token for future purpose.
+  local_action: copy content={{ output.stdout }} dest="./token"
+  when:
+    - not kubeadm_already_run.stat.exists
+- name: Copying required files
+  shell: |
+        mkdir -p $HOME/.kube
+        sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  when:
+    - not kubeadm_already_run.stat.exists
+- name: Install calico pod network
+  command: kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+  ignore_errors: true

@@ -1,0 +1,33 @@
+#COnfigure worker node
+
+- name: Check if node already part of cluster
+  stat:
+     path: "/etc/kubernetes/kubelet.conf"
+  register: kubeadm_join_already_run
+
+- include_tasks: kubernetes_worker_prerequisites.yml
+  when:
+    - not kubeadm_join_already_run.stat.exists
+
+- name: Generate join token
+  shell: kubeadm token create --print-join-command
+  register: kubeadm_join_cmd
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  when:
+    - not kubeadm_join_already_run.stat.exists
+
+- set_fact:
+    kubeadm_join: "{{ kubeadm_join_cmd.stdout }}"
+  when:
+    - not kubeadm_join_already_run.stat.exists
+
+- name: Run kubeadm join
+  shell: "{{ kubeadm_join }}"
+  when:
+    - not kubeadm_join_already_run.stat.exists
+
+- name: Please hold on while we join the workers with kube master
+  pause:
+    seconds: 5
+  when:
+    - not kubeadm_join_already_run.stat.exists

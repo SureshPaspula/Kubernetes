@@ -1,0 +1,2 @@
+nexus_docker_registry_url: 
+if_insecure-registry: False
